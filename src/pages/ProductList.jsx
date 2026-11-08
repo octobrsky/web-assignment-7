@@ -1,140 +1,55 @@
-import React, { useMemo } from "react";
+import React, { useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getAllProducts } from "../api/productsApi.js";
+import { getProducts, getCategories, searchProducts, getProductsByCategory } from "../api/productsApi.js";
 import { useFetch } from "../hooks/useFetch.js";
 import { ProductCard } from "../components/ProductCard.jsx";
 
 export function ProductList() {
-  const { data, loading, error } = useFetch(getAllProducts);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const q = params.get("q") || "";
+  const cat = params.get("category") || "";
 
-  const query = searchParams.get("q") || "";
-  const selectedCategory = searchParams.get("category") || "all";
+  const { data: categories } = useFetch(useCallback(() => getCategories(), []));
+  const fetchProducts = useCallback(() => {
+    if (q) return searchProducts(q);
+    if (cat) return getProductsByCategory(cat);
+    return getProducts();
+  }, [q, cat]);
 
+  const { data, loading, error } = useFetch(fetchProducts);
   const products = data?.products || [];
-
-  const categories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category));
-    return ["all", ...set];
-  }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesQuery = product.title
-        .toLowerCase()
-        .includes(query.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || product.category === selectedCategory;
-      return matchesQuery && matchesCategory;
-    });
-  }, [products, query, selectedCategory]);
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchParams((prev) => {
-      if (value) {
-        prev.set("q", value);
-      } else {
-        prev.delete("q");
-      }
-      return prev;
-    });
-  };
-
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
-    setSearchParams((prev) => {
-      if (value && value !== "all") {
-        prev.set("category", value);
-      } else {
-        prev.delete("category");
-      }
-      return prev;
-    });
-  };
-
-  if (loading) {
-    return <div style={{ textAlign: "center", padding: "48px" }}>Loading products...</div>;
-  }
-
-J if (error) {
-    return (
-      <div style={{ textAlign: "center", padding: "48px", color: "#ef4444" }}>
-        Error: {error}
-      </div>
-    );
-  }
 
   return (
     <div>
-      <h1 style={{ marginBottom: "24px" }}>Product Catalogue</h1>
-
-
-      <div
-        style={{
-          display: "flex",
-          gap: "16px",
-          marginBottom: "24px",
-          flexWrap: "wrap"
-        }}
-      >
+      <h2>All Products</h2>
+      <div style={{ display: "flex", gap: 12, margin: "16px 0" }}>
         <input
-          type="search"
-          placeholder="Search products..."
-          value={query}
-          onChange={handleSearchChange}
-          style={{
-            flex: 1,
-            minWidth: "200px",
-            padding: "10px 14px",
-            border: "1px solid currentColor",
-            borderRadius: "4px",
-            backgroundColor: "transparent",
-            color: "inherit"
-          }}
+          placeholder="Search..."
+          value={q}
+          onChange={(e) => setParams(e.target.value ? { q: e.target.value, ...(cat ? { category: cat } : {}) } : (cat ? { category: cat } : {}))}
+          style={{ padding: 8, flex: 1 }}
         />
-
         <select
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          style={{
-            padding: "10px 14px",
-            border: "1px solid currentColor",
-            borderRadius: "4px",
-            backgroundColor: "transparent",
-            color: "inherit"
-          }}
+          value={cat}
+          onChange={(e) => setParams(e.target.value ? { category: e.target.value, ...(q ? { q } : {}) } : (q ? { q } : {}))}
+          style={{ padding: 8 }}
         >
-          {categories.map((cat) => (
-            <option
-              key={cat}
-              value={cat}
-              style={{ backgroundColor: "#222", color: "#fff" }}
-            >
-              {cat === "all" ? "All Categories" : cat.toUpperCase()}
-            </option>
-          ))}
+          <option value="">All Categories</option>
+          {Array.isArray(categories) && categories.map((c) => {
+            const val = typeof c === "string" ? c : c.slug || c.name;
+            const name = typeof c === "string" ? c : c.name || c.slug;
+            return <option key={val} value={val}>{name}</option>;
+          })}
         </select>
       </div>
 
+      {loading && <p>Loading products...</p>}
+      {error && <p style={{ color: "#ef4444" }}>Error: {error}</p>}
+      {!loading && !error && products.length === 0 && <p>No products found.</p>}
 
-      {filteredProducts.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px", opacity: 0.7 }}>
-          No products found matching your criteria.
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: "20px"
-          }}
-        >
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
+        {products.map((p) => <ProductCard key={p.id} product={p} />)}
+      </div>
     </div>
   );
 }
