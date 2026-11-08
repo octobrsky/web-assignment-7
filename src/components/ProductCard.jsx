@@ -7,13 +7,13 @@ export function ProductCard({ product }) {
 
   return (
     <div
-      style}{{
+      style={{
         border: "1px solid rgba(128, 128, 128, 0.25)",
         borderRadius: "8px",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "rgba(128, 128, 128, 0.05)"
+        backgroundColor: "rgba(128, 128, 128, 0.03)"
       }}
     >
       <img
@@ -27,24 +27,13 @@ export function ProductCard({ product }) {
         }}
       />
       <div style={{ padding: "16px", display: "flex", flexDirection: "column", flex: 1 }}>
-        <span
-          style={{
-            fontSize: "0.75rem",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            opacity: 0.7,
-            marginBottom: "4px"
-          }}
-        >
+        <span style={{ fontSize: "0.8rem", textTransform: "uppercase", opacity: 0.6, letterSpacing: "0.05em" }}>
           {product.category}
         </span>
-        <h3 style={{ margin: "0 0 8px 0", fontSize: "1.05rem" }}>
-          {product.title}
-        </h3>
-        <p style={{ margin: "0 0 16px 0", fontWeight: "bold", fontSize: "1.1rem" }}>
-          ${product.price}
+        <h3 style={{ margin: "8px 0", fontSize: "1.1rem" }}>{product.title}</h3>
+        <p style={{ margin: "0 0 16px 0", fontWeight: "bold", fontSize: "1.2rem" }}>
+          $${product.price}
         </p>
-
         <div style={{ marginTop: "auto", display: "flex", gap: "8px" }}>
           <Link
             to={`/products/${product.id}`}
@@ -56,7 +45,8 @@ export function ProductCard({ product }) {
               border: "1px solid currentColor",
               textDecoration: "none",
               color: "inherit",
-              fontSize: "0.9rem"
+              fontSize: "0.9rem",
+              fontWeight: "500"
             }}
           >
             Details
@@ -66,14 +56,14 @@ export function ProductCard({ product }) {
             onClick={() => addItem(product)}
             style={{
               flex: 1,
-              cursor: "pointer",
               padding: "8px 12px",
               borderRadius: "4px",
               border: "none",
               backgroundColor: "#2563eb",
               color: "#ffffff",
+              fontSize: "0.9rem",
               fontWeight: "600",
-              fontSize: "0.9rem"
+              cursor: "pointer"
             }}
           >
             Add to Cart
